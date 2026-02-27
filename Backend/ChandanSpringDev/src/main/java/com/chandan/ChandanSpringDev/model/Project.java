@@ -7,15 +7,14 @@ import java.util.List;
 
 @Document(collection = "projects")
 @lombok.Data
-
 public class Project {
-     @Id
+    @Id
     private String id;
     private String name;
     private String description;
     private List<String> technologies;
     private String githubUrl;
-    private String demoUrl;
+    private String liveUrl; // renamed from demoUrl, harmonised with frontend
+    private String imageUrl; // stored file path for project screenshot
     private LocalDate createdAt = LocalDate.now();
-    
 }

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Upload, BookOpen, Briefcase, Code, Folder } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Edit2, Upload, BookOpen, Briefcase, Code, Folder, LogOut } from 'lucide-react';
 import { educationService, skillsService, experienceService, projectService } from '../services/api';
 import Modal from './Modal';
 import PortfolioForm from './PortfolioForm';
 
-const Dashboard = () => {
+const Dashboard = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState('education');
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,14 +18,14 @@ const Dashboard = () => {
         { id: 'projects', label: 'Projects', icon: Folder },
     ];
 
-    const getService = () => {
+    const getService = useCallback(() => {
         if (activeTab === 'education') return educationService;
         if (activeTab === 'skills') return skillsService;
         if (activeTab === 'experience') return experienceService;
         if (activeTab === 'projects') return projectService;
-    };
+    }, [activeTab]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const service = getService();
@@ -37,11 +37,11 @@ const Dashboard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getService]);
 
     useEffect(() => {
         fetchData();
-    }, [activeTab]);
+    }, [fetchData]);
 
     const handleAdd = () => {
         setEditingItem(null);
@@ -87,15 +87,21 @@ const Dashboard = () => {
             const file = e.target.files[0];
             if (file) {
                 try {
-                    if (type === 'marksCard') {
-                        await educationService.uploadMarksCard(id, file);
-                    } else {
-                        await educationService.uploadCertificate(id, file);
+                    const service = getService();
+                    if (activeTab === 'education') {
+                        if (type === 'marksCard') await service.uploadMarksCard(id, file);
+                        else await service.uploadCertificate(id, file);
+                    } else if (activeTab === 'projects' && type === 'image') {
+                        await service.uploadImage(id, file);
+                    } else if (activeTab === 'skills' && type === 'icon') {
+                        await service.uploadIcon(id, file);
+                    } else if (type === 'certificate') {
+                        await service.uploadCertificate(id, file);
                     }
-                    alert('File uploaded successfully!');
                     fetchData();
                 } catch (error) {
                     console.error('Error uploading file:', error);
+                    alert('Error uploading file. Check console.');
                 }
             }
         };
@@ -104,7 +110,7 @@ const Dashboard = () => {
 
     return (
         <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
-            <header className="section-header" style={{ marginBottom: '3rem' }}>
+            <header className="section-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h1 style={{
                         fontSize: '3rem',
@@ -119,10 +125,16 @@ const Dashboard = () => {
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Manage your professional identity with ease</p>
                 </div>
-                <button onClick={handleAdd} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>
-                    <Plus size={20} />
-                    Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button onClick={handleAdd} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>
+                        <Plus size={20} />
+                        Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    </button>
+                    <button onClick={onLogout} className="btn" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, cursor: 'pointer' }}>
+                        <LogOut size={20} />
+                        Logout
+                    </button>
+                </div>
             </header>
 
             <div style={{
@@ -139,7 +151,7 @@ const Dashboard = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`btn ${activeTab === tab.id ? 'btn-primary' : 'glass-effect'}`}
+                            className={`btn glass-effect ${activeTab === tab.id ? 'active' : ''}`}
                             style={{
                                 padding: '1rem 2rem',
                                 flexShrink: 0,
@@ -155,116 +167,211 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '10rem', color: 'var(--text-secondary)' }}>
-                    <div className="loader" style={{
-                        width: '40px',
-                        height: '40px',
-                        border: '3px solid var(--glass-border)',
-                        borderTop: '3px solid var(--primary)',
-                        borderRadius: '50%',
-                        margin: '0 auto 1.5rem',
-                        animation: 'spin 1s linear infinite'
-                    }}></div>
+                <div className="animate-slide-up" style={{ textAlign: 'center', padding: '8rem 2rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 2rem' }}>
+                        {/* Outer glowing ring */}
+                        <div style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                            border: '3px solid transparent',
+                            borderTopColor: 'var(--primary)',
+                            borderRightColor: 'var(--accent)',
+                            borderRadius: '50%',
+                            animation: 'spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite'
+                        }}></div>
+                        {/* Inner spinning ring */}
+                        <div style={{
+                            position: 'absolute', top: '10px', left: '10px', right: '10px', bottom: '10px',
+                            border: '3px solid transparent',
+                            borderTopColor: 'var(--accent)',
+                            borderLeftColor: 'var(--primary)',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite reverse'
+                        }}></div>
+                        {/* Center glowing dot */}
+                        <div style={{
+                            position: 'absolute', top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: '12px', height: '12px',
+                            background: 'var(--primary)',
+                            borderRadius: '50%',
+                            boxShadow: '0 0 15px 5px var(--glow-primary)',
+                            animation: 'pulseGlow 2s infinite'
+                        }}></div>
+                    </div>
                     <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-                    <p style={{ fontSize: '1.1rem' }}>Synchronizing with database...</p>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Synchronizing Data</h3>
+                    <p style={{ fontSize: '0.95rem', opacity: 0.8 }}>Connecting to secure backend server...</p>
                 </div>
             ) : (
                 <div className="grid">
                     {data.length > 0 ? (
-                        data.map((item) => (
-                            <div key={item.id} className="card glass-effect" style={{ padding: '2rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.35rem' }}>
-                                            {item.degree || item.skillName || item.role || item.projectName || 'Untitled'}
-                                        </h3>
-                                        <p style={{ color: 'var(--primary)', fontWeight: '500', fontSize: '0.95rem' }}>
-                                            {item.institution || item.category || item.company}
-                                        </p>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button onClick={() => handleEdit(item)} className="btn glass-effect" style={{ padding: '0.6rem', color: 'var(--text-secondary)', borderRadius: '10px' }}>
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button onClick={() => handleDelete(item.id)} className="btn glass-effect" style={{ padding: '0.6rem', color: 'var(--danger)', borderRadius: '10px' }}>
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div style={{ color: 'var(--text-secondary)' }}>
-                                    {activeTab === 'education' && (
-                                        <>
-                                            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-dark)', borderRadius: '10px' }}>
-                                                <p style={{ marginBottom: '0.5rem' }}>📅 <strong>Year:</strong> {item.year}</p>
-                                                <p>🎓 <strong>Grade:</strong> {item.grade}</p>
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                                <button onClick={() => handleFileUpload(item.id, 'marksCard')} className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem' }}>
-                                                    <Upload size={16} /> Marks Card
-                                                </button>
-                                                <button onClick={() => handleFileUpload(item.id, 'certificate')} className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem' }}>
-                                                    <Upload size={16} /> Certificate
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {activeTab === 'skills' && (
-                                        <div style={{ marginTop: '0.5rem' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                                                <span style={{ fontWeight: '500' }}>Expertise Level</span>
-                                                <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{item.proficiency}%</span>
-                                            </div>
-                                            <div style={{ width: '100%', height: '10px', background: 'var(--bg-dark)', borderRadius: '5px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${item.proficiency}%`, height: '100%', background: 'linear-gradient(to right, #6366f1, #10b981)', borderRadius: '5px' }}></div>
-                                            </div>
+                        data.map((item, index) => {
+                            // Max delay class is delay-5
+                            const delayClass = `delay-${Math.min(index + 1, 5)}`;
+                            return (
+                                <div key={item.id} className={`card animate-slide-up ${delayClass}`}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+                                        <div>
+                                            <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.35rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                {activeTab === 'skills' && item.icon && (
+                                                    <div style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                                        <img src={`http://localhost:8080/uploads/${item.icon}`} alt={item.skillName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                                    </div>
+                                                )}
+                                                {item.degree || item.skillName || item.role || item.name || 'Untitled'}
+                                            </h3>
+                                            {item.description && activeTab === 'skills' && (
+                                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem', lineHeight: '1.4' }}>
+                                                    {item.description}
+                                                </p>
+                                            )}
+                                            <p style={{ color: 'var(--primary)', fontWeight: '500', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                                {item.institution || item.category || item.company}
+                                            </p>
                                         </div>
-                                    )}
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button onClick={() => handleEdit(item)} className="btn glass-effect" style={{ padding: '0.6rem', color: 'var(--text-secondary)', borderRadius: '10px' }}>
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button onClick={() => handleDelete(item.id)} className="btn glass-effect" style={{ padding: '0.6rem', color: 'var(--danger)', borderRadius: '10px' }}>
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                    {activeTab === 'experience' && (
-                                        <>
-                                            <div style={{ display: 'inline-block', padding: '0.35rem 0.85rem', background: 'var(--glass)', borderRadius: '20px', border: '1px solid var(--glass-border)', fontSize: '0.85rem', marginBottom: '1.25rem', color: 'var(--primary)', fontWeight: '600' }}>
-                                                {item.duration}
-                                            </div>
-                                            <p style={{ fontSize: '1rem', lineHeight: '1.7', color: 'var(--text-secondary)' }}>{item.description}</p>
-                                        </>
-                                    )}
+                                    <div style={{ color: 'var(--text-secondary)' }}>
+                                        {activeTab === 'education' && (
+                                            <>
+                                                <div style={{ marginBottom: '1.5rem', padding: '1.25rem', background: 'rgba(79, 70, 229, 0.05)', border: '1px solid rgba(79, 70, 229, 0.1)', borderRadius: '12px' }}>
+                                                    <p style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                        <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>📅</span>
+                                                        Year <span style={{ color: 'var(--primary)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.graduationYear}</span>
+                                                    </p>
+                                                    <p style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                        <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>🎓</span>
+                                                        Grade <span style={{ color: 'var(--accent)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.grade}</span>
+                                                    </p>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                    <button onClick={() => handleFileUpload(item.id, 'marksCard')} className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem' }}>
+                                                        <Upload size={16} /> Marks Card
+                                                    </button>
+                                                    <button onClick={() => handleFileUpload(item.id, 'certificate')} className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem' }}>
+                                                        <Upload size={16} /> Certificate
+                                                    </button>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+                                                    {item.marksCards?.length > 0 && (
+                                                        <a href={`http://localhost:8080/uploads/${item.marksCards[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                            View Marks Card
+                                                        </a>
+                                                    )}
+                                                    {item.certificates?.length > 0 && (
+                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                            View Certificate
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
 
-                                    {activeTab === 'projects' && (
-                                        <>
-                                            <p style={{ marginBottom: '1.5rem', fontSize: '1rem', lineHeight: '1.7' }}>{item.description}</p>
-                                            <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.25rem' }}>
-                                                {item.githubLink && (
-                                                    <a href={item.githubLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
-                                                        <Code size={18} /> Repo
-                                                    </a>
+                                        {activeTab === 'skills' && (
+                                            <>
+                                                {item.yearsOfExperience && (
+                                                    <div style={{ display: 'inline-block', padding: '0.25rem 0.75rem', background: 'rgba(79, 70, 229, 0.08)', borderRadius: '20px', border: '1px solid rgba(79, 70, 229, 0.2)', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', marginBottom: '0.5rem' }}>
+                                                        {item.yearsOfExperience} {item.yearsOfExperience === '1' || item.yearsOfExperience === 1 ? 'Year' : 'Years'} Exp
+                                                    </div>
                                                 )}
-                                                {item.liveLink && (
-                                                    <a href={item.liveLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: '600' }}>
-                                                        <Folder size={18} /> Demo
-                                                    </a>
+                                                <div style={{ marginTop: '0.5rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                                        <span style={{ fontWeight: '500' }}>Expertise Level</span>
+                                                        <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{item.proficiencyLevel}%</span>
+                                                    </div>
+                                                    <div style={{ width: '100%', height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
+                                                        <div style={{ width: `${item.proficiencyLevel || 0}%`, height: '100%', background: 'linear-gradient(to right, #4f46e5, #059669)', borderRadius: '5px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                                                    <button onClick={() => handleFileUpload(item.id, 'icon')} className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', flex: '1 1 calc(50% - 0.375rem)' }}>
+                                                        <Upload size={16} /> Upload Icon
+                                                    </button>
+                                                    <button onClick={() => handleFileUpload(item.id, 'certificate')} className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', flex: '1 1 calc(50% - 0.375rem)' }}>
+                                                        <Upload size={16} /> Upload Certificate
+                                                    </button>
+                                                    {item.certificates?.length > 0 && (
+                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: '1 1 100%', textAlign: 'center', marginTop: '0.25rem' }}>
+                                                            View Certificate
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {activeTab === 'experience' && (
+                                            <>
+                                                <div style={{ display: 'inline-block', padding: '0.35rem 0.85rem', background: 'var(--glass)', borderRadius: '20px', border: '1px solid var(--glass-border)', fontSize: '0.85rem', marginBottom: '1.25rem', color: 'var(--primary)', fontWeight: '600' }}>
+                                                    {item.duration}
+                                                </div>
+                                                <p style={{ fontSize: '1rem', lineHeight: '1.7', color: 'var(--text-secondary)' }}>{item.description}</p>
+                                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                                                    <button onClick={() => handleFileUpload(item.id, 'certificate')} className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', flex: 1 }}>
+                                                        <Upload size={16} /> Upload Certificate
+                                                    </button>
+                                                    {item.certificates?.length > 0 && (
+                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: 1, textAlign: 'center' }}>
+                                                            View Certificate
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {activeTab === 'projects' && (
+                                            <>
+                                                {item.imageUrl && (
+                                                    <div className="img-wrapper">
+                                                        <img src={`http://localhost:8080/uploads/${item.imageUrl}`} alt={item.name} />
+                                                    </div>
                                                 )}
-                                            </div>
-                                        </>
-                                    )}
+                                                <p style={{ marginBottom: '1.5rem', fontSize: '1rem', lineHeight: '1.7' }}>{item.description}</p>
+                                                <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.25rem', paddingBottom: '1.25rem' }}>
+                                                    {item.githubUrl && (
+                                                        <a href={item.githubUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>
+                                                            <Code size={18} /> Repo
+                                                        </a>
+                                                    )}
+                                                    {item.liveUrl && (
+                                                        <a href={item.liveUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: '600' }}>
+                                                            <Folder size={18} /> Demo
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                    <button onClick={() => handleFileUpload(item.id, 'image')} className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', flex: 1 }}>
+                                                        <Upload size={16} /> Upload Image
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
-                        <div style={{
+                        <div className="animate-slide-up delay-1" style={{
                             gridColumn: '1/-1',
                             textAlign: 'center',
-                            padding: '8rem 2rem',
+                            padding: '6rem 2rem',
                             color: 'var(--text-secondary)',
-                            background: 'rgba(30, 41, 59, 0.4)',
-                            borderRadius: '32px',
-                            border: '2px dashed var(--glass-border)'
+                            background: 'var(--glass)',
+                            backdropFilter: 'blur(12px)',
+                            borderRadius: '24px',
+                            border: '1px solid var(--glass-border)'
                         }}>
                             <div style={{ marginBottom: '1.5rem', opacity: 0.5 }}>
                                 <Briefcase size={64} style={{ margin: '0 auto' }} />
                             </div>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: 'white' }}>No Records Found</h2>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>No Records Found</h2>
                             <p style={{ maxWidth: '400px', margin: '0 auto 2rem' }}>Ready to showcase your {activeTab}? Start by adding your first record using the button above.</p>
                             <button onClick={handleAdd} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}>
                                 Get Started

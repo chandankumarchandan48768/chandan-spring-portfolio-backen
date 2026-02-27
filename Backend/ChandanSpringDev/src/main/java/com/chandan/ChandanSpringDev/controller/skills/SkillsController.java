@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.chandan.ChandanSpringDev.model.Skills;
 import com.chandan.ChandanSpringDev.service.SkillService;
@@ -12,7 +13,7 @@ import com.chandan.ChandanSpringDev.service.SkillService;
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/skills")
 public class SkillsController {
-    
+
     @Autowired
     private SkillService service;
 
@@ -39,7 +40,22 @@ public class SkillsController {
         if (updatedSkill != null) {
             return ResponseEntity.ok(updatedSkill);
         } else {
-            return ResponseEntity.notFound().build();   
+            return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping("/{id}/upload-certificate")
+    public ResponseEntity<Skills> uploadCertificate(@PathVariable String id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(service.addCertificate(id, file));
+    }
+
+    @DeleteMapping("/{id}/certificate/{fileName}")
+    public ResponseEntity<Skills> removeCertificate(@PathVariable String id, @PathVariable String fileName) {
+        return ResponseEntity.ok(service.removeCertificate(id, fileName));
+    }
+
+    @PostMapping("/{id}/upload-icon")
+    public ResponseEntity<Skills> uploadIcon(@PathVariable String id, @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(service.uploadIcon(id, file));
     }
 }

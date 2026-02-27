@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.chandan.ChandanSpringDev.model.Experience;
 import com.chandan.ChandanSpringDev.service.ExperienceService;
@@ -46,7 +48,7 @@ public class ExperienceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Experience> updateExperience(@PathVariable String id, @RequestBody Experience experience) {                                                                                              // space
+    public ResponseEntity<Experience> updateExperience(@PathVariable String id, @RequestBody Experience experience) { // space
         return service.updateExperience(id, experience);
     }
 
@@ -63,6 +65,17 @@ public class ExperienceController {
     @DeleteMapping("/role/{role}")
     public ResponseEntity<Experience> deleteByRole(@PathVariable String role) {
         return service.deleteByRole(role);
+    }
+
+    @PostMapping("/{id}/upload-certificate")
+    public ResponseEntity<Experience> uploadCertificate(@PathVariable String id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(service.addCertificate(id, file));
+    }
+
+    @DeleteMapping("/{id}/certificate/{fileName}")
+    public ResponseEntity<Experience> removeCertificate(@PathVariable String id, @PathVariable String fileName) {
+        return ResponseEntity.ok(service.removeCertificate(id, fileName));
     }
 
 }

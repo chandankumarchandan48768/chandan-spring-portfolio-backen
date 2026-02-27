@@ -26,7 +26,7 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <label>Institution</label>
                     <input name="institution" value={formData.institution || ''} onChange={handleChange} className="input" placeholder="e.g. SSIT" required />
                     <label>Year</label>
-                    <input name="year" value={formData.year || ''} onChange={handleChange} className="input" placeholder="e.g. 2021" />
+                    <input name="graduationYear" value={formData.graduationYear || ''} onChange={handleChange} className="input" placeholder="e.g. 2021" />
                     <label>Grade</label>
                     <input name="grade" value={formData.grade || ''} onChange={handleChange} className="input" placeholder="e.g. 8.5 CGPA" />
                 </>
@@ -36,10 +36,16 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                 <>
                     <label>Skill Name</label>
                     <input name="skillName" value={formData.skillName || ''} onChange={handleChange} className="input" placeholder="e.g. React" required />
+                    <label>Description</label>
+                    <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="2" placeholder="Briefly describe your experience with this skill..." />
                     <label>Category</label>
                     <input name="category" value={formData.category || ''} onChange={handleChange} className="input" placeholder="e.g. Frontend" />
                     <label>Proficiency (%)</label>
-                    <input name="proficiency" type="number" value={formData.proficiency || ''} onChange={handleChange} className="input" placeholder="0-100" />
+                    <input name="proficiencyLevel" type="number" value={formData.proficiencyLevel || ''} onChange={handleChange} className="input" placeholder="0-100" />
+                    <label>Years of Experience</label>
+                    <input name="yearsOfExperience" type="number" value={formData.yearsOfExperience || ''} onChange={handleChange} className="input" placeholder="e.g. 2" />
+                    <label>Icon File (Upload Below)</label>
+                    <input name="icon" value={formData.icon || ''} readOnly className="input" placeholder="Upload icon via Dashboard" style={{ opacity: 0.7 }} />
                 </>
             )}
 
@@ -59,13 +65,13 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
             {type === 'projects' && (
                 <>
                     <label>Project Name</label>
-                    <input name="projectName" value={formData.projectName || ''} onChange={handleChange} className="input" placeholder="e.g. Portfolio App" required />
+                    <input name="name" value={formData.name || ''} onChange={handleChange} className="input" placeholder="e.g. Portfolio App" required />
                     <label>Description</label>
                     <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="4" placeholder="Project overview..." />
-                    <label>Github Link</label>
-                    <input name="githubLink" value={formData.githubLink || ''} onChange={handleChange} className="input" placeholder="https://github.com/..." />
-                    <label>Live Link</label>
-                    <input name="liveLink" value={formData.liveLink || ''} onChange={handleChange} className="input" placeholder="https://..." />
+                    <label>Github URL</label>
+                    <input name="githubUrl" value={formData.githubUrl || ''} onChange={handleChange} className="input" placeholder="https://github.com/..." />
+                    <label>Live URL</label>
+                    <input name="liveUrl" value={formData.liveUrl || ''} onChange={handleChange} className="input" placeholder="https://..." />
                 </>
             )}
 

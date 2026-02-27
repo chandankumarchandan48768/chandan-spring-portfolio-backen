@@ -5,25 +5,33 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.chandan.ChandanSpringDev.model.Project;
 import com.chandan.ChandanSpringDev.repository.ProjectRepository;
 
 @Service
 public class ProjectService {
-    
+
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
     }
 
-    public Project addProject(Project project){
+    public Project addProject(Project project) {
         return projectRepository.save(project);
     }
 
-    public void deleteProject(String projectId){
+    public void deleteProject(String projectId) {
+        projectRepository.findById(projectId).ifPresent(p -> {
+            if (p.getImageUrl() != null)
+                fileStorageService.deleteFile(p.getImageUrl());
+        });
         projectRepository.deleteById(projectId);
     }
 
@@ -40,13 +48,37 @@ public class ProjectService {
         return projectRepository.findById(projectId);
     }
 
-    public Optional<Project> getProjectByName(String name){
+    public Optional<Project> getProjectByName(String name) {
         return projectRepository.findByName(name);
     }
 
     public void deleteByName(String name) {
-        Optional<Project> project = projectRepository.findByName(name);
-        project.ifPresent(p -> projectRepository.delete(p));
+        projectRepository.findByName(name).ifPresent(p -> {
+            if (p.getImageUrl() != null)
+                fileStorageService.deleteFile(p.getImageUrl());
+            projectRepository.delete(p);
+        });
     }
 
+    public Project uploadImage(String id, MultipartFile file) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found: " + id));
+        // Delete old image if one exists
+        if (project.getImageUrl() != null) {
+            fileStorageService.deleteFile(project.getImageUrl());
+        }
+        String filePath = fileStorageService.storeFile(file, "project-images");
+        project.setImageUrl(filePath);
+        return projectRepository.save(project);
+    }
+
+    public Project removeImage(String id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found: " + id));
+        if (project.getImageUrl() != null) {
+            fileStorageService.deleteFile(project.getImageUrl());
+            project.setImageUrl(null);
+        }
+        return projectRepository.save(project);
+    }
 }

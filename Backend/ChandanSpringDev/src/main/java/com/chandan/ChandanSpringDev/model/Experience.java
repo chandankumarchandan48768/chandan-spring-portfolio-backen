@@ -2,6 +2,7 @@ package com.chandan.ChandanSpringDev.model;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,7 +12,7 @@ import lombok.Data;
 @Document(collection = "experience")
 @Data
 public class Experience {
-    
+
     @Id
     private String id;
     private String company;
@@ -24,6 +25,8 @@ public class Experience {
     private LocalDate endDate;
     private List<String> skillsUsed;
     private List<String> responsibilities;
-    
-    public Experience() {}
+    private List<String> certificates = new ArrayList<>();
+
+    public Experience() {
+    }
 }
