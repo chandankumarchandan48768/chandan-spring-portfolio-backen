@@ -73,11 +73,20 @@ public class FileStorageService {
                     resourceType = "raw";
                 }
 
+                Map<String, Object> params = new java.util.HashMap<>();
+                params.put("folder", "portfolio/" + subDir);
+                params.put("resource_type", resourceType);
+
+                if ("raw".equals(resourceType) && originalFileName != null) {
+                    params.put("use_filename", true);
+                    params.put("unique_filename", true);
+                    // For raw files, explicitly setting public_id with extension sometimes helps
+                    params.put("public_id", UUID.randomUUID().toString() + "_" + originalFileName);
+                }
+
                 @SuppressWarnings("unchecked")
                 Map<Object, Object> uploadResult = (Map<Object, Object>) cloudinary.uploader().upload(file.getBytes(),
-                        ObjectUtils.asMap(
-                                "folder", "portfolio/" + subDir,
-                                "resource_type", resourceType));
+                        params);
 
                 return (String) uploadResult.get("secure_url");
             } catch (IOException ex) {
