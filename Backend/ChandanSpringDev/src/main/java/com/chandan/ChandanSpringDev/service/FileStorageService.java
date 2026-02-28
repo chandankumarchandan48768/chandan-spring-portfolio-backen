@@ -63,7 +63,14 @@ public class FileStorageService {
                             lowerName.endsWith(".svg") || lowerName.endsWith(".webp") ||
                             lowerName.endsWith(".ico")) {
                         resourceType = "image";
+                    } else if (subDir.contains("resume") || subDir.contains("certificates")
+                            || subDir.contains("marks-cards")) {
+                        // Fallback for PDFs if extension is missing but uploaded to document folders
+                        resourceType = "raw";
                     }
+                } else if (subDir.contains("resume") || subDir.contains("certificates")
+                        || subDir.contains("marks-cards")) {
+                    resourceType = "raw";
                 }
 
                 @SuppressWarnings("unchecked")
