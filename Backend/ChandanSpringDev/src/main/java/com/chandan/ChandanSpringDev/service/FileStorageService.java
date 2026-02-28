@@ -46,24 +46,38 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file, String subDir) {
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        String originalFileName = file.getOriginalFilename();
+        String fileName = UUID.randomUUID().toString() + "_" + originalFileName;
 
         if (cloudinary != null) {
             try {
-                // For PDFs (resumes/certificates), use 'auto' resource type
+                // Explicitly detect image extensions to force 'image' type and prevent 'raw'
+                // fallback
+                String resourceType = "auto";
+                if (originalFileName != null) {
+                    String lowerName = originalFileName.toLowerCase();
+                    if (lowerName.endsWith(".pdf")) {
+                        resourceType = "raw";
+                    } else if (lowerName.endsWith(".png") || lowerName.endsWith(".jpg") ||
+                            lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif") ||
+                            lowerName.endsWith(".svg") || lowerName.endsWith(".webp") ||
+                            lowerName.endsWith(".ico")) {
+                        resourceType = "image";
+                    }
+                }
+
                 @SuppressWarnings("unchecked")
-                Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(),
+                Map<Object, Object> uploadResult = (Map<Object, Object>) cloudinary.uploader().upload(file.getBytes(),
                         ObjectUtils.asMap(
                                 "folder", "portfolio/" + subDir,
-                                "resource_type", "auto" // 'auto' handles images and PDFs well
-                        ));
+                                "resource_type", resourceType));
 
                 return (String) uploadResult.get("secure_url");
             } catch (IOException ex) {
                 throw new RuntimeException("Could not store file to Cloudinary: " + fileName, ex);
             }
         }
-
+        // ... (rest of the code for local storage stays same)
         try {
             if (fileName.contains("..")) {
                 throw new RuntimeException("Sorry! Filename contains invalid path sequence " + fileName);
@@ -82,11 +96,17 @@ public class FileStorageService {
     public void deleteFile(String filePath) {
         if (cloudinary != null && filePath.startsWith("https://res.cloudinary.com")) {
             try {
+                // Detect resource type from URL or assumed
+                String resourceType = filePath.contains("/raw/upload/") ? "raw" : "image";
+
                 // Extract public_id from Cloudinary URL
                 // Example URL:
                 // https://res.cloudinary.com/cloud_name/image/upload/v12345/portfolio/subDir/public_id.jpg
-                // Logic: Find everything after /upload/v[digits]/, remove the extension
-                String[] parts = filePath.split("/upload/");
+                // https://res.cloudinary.com/cloud_name/raw/upload/v12345/portfolio/subDir/public_id.pdf
+
+                String uploadMarker = "/" + resourceType + "/upload/";
+                String[] parts = filePath.split(uploadMarker);
+
                 if (parts.length > 1) {
                     String afterUpload = parts[1];
                     // Skip version (v1234567/) if present
@@ -94,17 +114,17 @@ public class FileStorageService {
                         afterUpload = afterUpload.substring(afterUpload.indexOf("/") + 1);
                     }
 
-                    // Remove file extension
                     String publicId = afterUpload;
-                    int dotIndex = publicId.lastIndexOf(".");
-                    if (dotIndex != -1) {
-                        // Check if it's not a 'raw' file (where we might want to keep the extension)
-                        // Cloudinary images don't need the extension in public_id for deletion
-                        // But let's be safe and try to delete with/without
-                        publicId = publicId.substring(0, dotIndex);
+
+                    // IF it's NOT a 'raw' resource, remove extension
+                    if (!"raw".equals(resourceType)) {
+                        int dotIndex = publicId.lastIndexOf(".");
+                        if (dotIndex != -1) {
+                            publicId = publicId.substring(0, dotIndex);
+                        }
                     }
 
-                    cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+                    cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType));
                 }
                 return;
             } catch (Exception ex) {

@@ -44,6 +44,8 @@ public class SkillService {
 
     public void deleteSkill(String id) {
         repository.findById(id).ifPresent(s -> {
+            if (s.getIcon() != null && !s.getIcon().isEmpty())
+                fileStorageService.deleteFile(s.getIcon());
             if (s.getCertificates() != null)
                 s.getCertificates().forEach(fileStorageService::deleteFile);
         });

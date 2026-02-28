@@ -52,6 +52,16 @@ public class AuthService {
             userRepository.save(secondaryAdmin);
             System.out.println("Secondary admin user created: " + secondaryEmail);
         }
+
+        // User's personal admin
+        String personalEmail = "chandankumarchandan48768@gmail.com";
+        if (userRepository.findByEmail(personalEmail).isEmpty()) {
+            User personalAdmin = new User();
+            personalAdmin.setEmail(personalEmail);
+            personalAdmin.setPassword(passwordEncoder.encode("Chandan@123"));
+            userRepository.save(personalAdmin);
+            System.out.println("Personal admin user created: " + personalEmail);
+        }
     }
 
     public String authenticate(String email, String password) {

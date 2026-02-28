@@ -14,8 +14,10 @@ const HeroText = () => {
     try {
       const data = await api.getResume();
       if (data.exists && data.url) {
-        const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:8080';
-        window.open(`${baseUrl}${data.url}`, '_blank');
+        const fullUrl = data.url.startsWith('http')
+          ? data.url
+          : `${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:8080'}${data.url}`;
+        window.open(fullUrl, '_blank');
       } else {
         alert("Resume not available currently.");
       }

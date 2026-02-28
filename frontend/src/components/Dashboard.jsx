@@ -14,8 +14,8 @@ const Dashboard = ({ onLogout }) => {
 
     const getUploadUrl = (filename) => {
         if (!filename) return '';
-        if (filename.startsWith('http')) return filename; // S3 full URL
-        const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/api$/, '');
+        if (filename.startsWith('http')) return filename; // Cloudinary/S3 full URL
+        const baseUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/api$/, '');
         return filename.startsWith('/uploads/') ? `${baseUrl}${filename}` : `${baseUrl}/uploads/${filename}`;
     };
 
@@ -309,7 +309,7 @@ const Dashboard = ({ onLogout }) => {
                                             <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '0.35rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                 {activeTab === 'skills' && item.icon && (
                                                     <div style={{ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                                                        <img src={`http://localhost:8080/uploads/${item.icon}`} alt={item.skillName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                                        <img src={getUploadUrl(item.icon)} alt={item.skillName} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                                                     </div>
                                                 )}
                                                 {item.degree || item.skillName || item.role || item.name || 'Untitled'}
