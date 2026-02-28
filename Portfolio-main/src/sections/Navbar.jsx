@@ -27,7 +27,7 @@ function Navigation({ onClose }) {
       ))}
       <li className="nav-li">
         <a
-          href="http://localhost:5173"
+          href="https://chandan-portfolio-admin.onrender.com"
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
