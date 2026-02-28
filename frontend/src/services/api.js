@@ -119,4 +119,16 @@ export const projectService = {
   },
 };
 
+export const resumeService = {
+  getStatus: () => api.get('/resume/status'),
+  upload: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/resume/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  delete: () => api.delete('/resume')
+};
+
 export default api;

@@ -15,6 +15,7 @@ com/chandan/ChandanSpringDev/security/SecurityConfig.class
 com/chandan/ChandanSpringDev/service/OtpService$OtpData.class
 com/chandan/ChandanSpringDev/repository/ProjectRepository.class
 com/chandan/ChandanSpringDev/controller/education/EducationController.class
+com/chandan/ChandanSpringDev/controller/ResumeController.class
 com/chandan/ChandanSpringDev/repository/SkillRepository.class
 com/chandan/ChandanSpringDev/repository/ExperienceRepository.class
 com/chandan/ChandanSpringDev/model/Skills.class

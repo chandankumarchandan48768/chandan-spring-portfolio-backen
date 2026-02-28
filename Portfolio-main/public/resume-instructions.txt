@@ -1,0 +1,14 @@
+# Resume Placeholder
+
+This is a placeholder resume file. Replace this with your actual resume PDF.
+
+To add your resume:
+1. Place your resume PDF file in the `/public` folder
+2. Name it `resume.pdf`
+3. The download button will automatically work
+
+The button is already configured in the Hero section with:
+- Download link: `/resume.pdf`
+- Download filename: `Ali_Sanati_Resume.pdf`
+- Gradient cyan-to-purple styling
+- Hover animations and effects

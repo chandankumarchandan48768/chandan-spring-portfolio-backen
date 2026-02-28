@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Edit2, Upload, BookOpen, Briefcase, Code, Folder, LogOut } from 'lucide-react';
-import { educationService, skillsService, experienceService, projectService } from '../services/api';
+import { Plus, Trash2, Edit2, Upload, BookOpen, Briefcase, Code, Folder, LogOut, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { educationService, skillsService, experienceService, projectService, resumeService } from '../services/api';
 import Modal from './Modal';
 import PortfolioForm from './PortfolioForm';
 
@@ -10,6 +10,14 @@ const Dashboard = ({ onLogout }) => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [resumeStatus, setResumeStatus] = useState({ exists: false, url: null });
+
+    const getUploadUrl = (filename) => {
+        if (!filename) return '';
+        if (filename.startsWith('http')) return filename; // S3 full URL
+        const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/api$/, '');
+        return filename.startsWith('/uploads/') ? `${baseUrl}${filename}` : `${baseUrl}/uploads/${filename}`;
+    };
 
     const tabs = [
         { id: 'education', label: 'Education', icon: BookOpen },
@@ -31,6 +39,10 @@ const Dashboard = ({ onLogout }) => {
             const service = getService();
             const response = await service.getAll();
             setData(response.data || []);
+
+            // Also fetch resume status
+            const resumeRes = await resumeService.getStatus();
+            setResumeStatus(resumeRes.data);
         } catch (error) {
             console.error('Error fetching data:', error);
             setData([]);
@@ -68,10 +80,27 @@ const Dashboard = ({ onLogout }) => {
     const handleSubmit = async (formData) => {
         try {
             const service = getService();
+            let dataToSend = { ...formData };
+
+            // Handle technologies as an array for projects
+            if (activeTab === 'projects' && typeof dataToSend.technologies === 'string') {
+                dataToSend.technologies = dataToSend.technologies.split(',').map(tech => tech.trim()).filter(tech => tech !== '');
+            }
+
+            // Handle skillsUsed and responsibilities as arrays for experience
+            if (activeTab === 'experience') {
+                if (typeof dataToSend.skillsUsed === 'string') {
+                    dataToSend.skillsUsed = dataToSend.skillsUsed.split(',').map(s => s.trim()).filter(s => s !== '');
+                }
+                if (typeof dataToSend.responsibilities === 'string') {
+                    dataToSend.responsibilities = dataToSend.responsibilities.split(',').map(r => r.trim()).filter(r => r !== '');
+                }
+            }
+
             if (editingItem && editingItem.id) {
-                await service.update(editingItem.id, formData);
+                await service.update(editingItem.id, dataToSend);
             } else {
-                await service.create(formData);
+                await service.create(dataToSend);
             }
             setIsModalOpen(false);
             fetchData();
@@ -108,6 +137,35 @@ const Dashboard = ({ onLogout }) => {
         input.click();
     };
 
+    const handleResumeUpload = async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/pdf';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                try {
+                    await resumeService.upload(file);
+                    fetchData(); // Refreshes status
+                } catch (err) {
+                    alert('Failed to upload resume. PDF only.');
+                }
+            }
+        };
+        input.click();
+    };
+
+    const handleDeleteResume = async () => {
+        if (window.confirm('Delete your uploaded resume?')) {
+            try {
+                await resumeService.delete();
+                fetchData();
+            } catch (err) {
+                alert('Failed to delete resume.');
+            }
+        }
+    };
+
     return (
         <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
             <header className="section-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -136,6 +194,42 @@ const Dashboard = ({ onLogout }) => {
                     </button>
                 </div>
             </header>
+
+            {/* Resume Management Card */}
+            <div className="card glass-effect" style={{ marginBottom: '3rem', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ padding: '1rem', background: resumeStatus.exists ? '#dcfce7' : '#f3f4f6', borderRadius: '12px', color: resumeStatus.exists ? '#16a34a' : '#6b7280' }}>
+                        <FileText size={28} />
+                    </div>
+                    <div>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>Master Resume</h3>
+                        {resumeStatus.exists ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#16a34a', fontSize: '0.9rem', fontWeight: 500 }}>
+                                <CheckCircle size={16} /> Ready for download
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontSize: '0.9rem', fontWeight: 500 }}>
+                                <AlertCircle size={16} /> No resume uploaded
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button onClick={handleResumeUpload} className="btn" style={{ background: 'var(--bg-secondary)', color: 'var(--primary)', border: '1px solid var(--border-color)', fontWeight: 600 }}>
+                        <Upload size={18} /> {resumeStatus.exists ? 'Update PDF' : 'Upload PDF'}
+                    </button>
+                    {resumeStatus.exists && (
+                        <>
+                            <a href={getUploadUrl(resumeStatus.url)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                                View Resume
+                            </a>
+                            <button onClick={handleDeleteResume} className="btn" style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+                                <Trash2 size={18} />
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
 
             <div style={{
                 display: 'flex',
@@ -247,10 +341,22 @@ const Dashboard = ({ onLogout }) => {
                                                         <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>📅</span>
                                                         Year <span style={{ color: 'var(--primary)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.graduationYear}</span>
                                                     </p>
-                                                    <p style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                    {item.fieldOfStudy && (
+                                                        <p style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                            <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>📚</span>
+                                                            Field of Study <span style={{ color: 'var(--primary)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.fieldOfStudy}</span>
+                                                        </p>
+                                                    )}
+                                                    <p style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontWeight: '500' }}>
                                                         <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>🎓</span>
                                                         Grade <span style={{ color: 'var(--accent)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.grade}</span>
                                                     </p>
+                                                    {(item.startDate || item.endDate) && (
+                                                        <p style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
+                                                            <span style={{ opacity: 0.7, marginRight: '0.5rem' }}>⏱️</span>
+                                                            Duration <span style={{ color: 'var(--primary)', marginLeft: '0.5rem', fontWeight: '700' }}>{item.startDate ? new Date(item.startDate).toLocaleDateString() : 'N/A'} - {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'Present'}</span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                     <button onClick={() => handleFileUpload(item.id, 'marksCard')} className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem' }}>
@@ -262,12 +368,12 @@ const Dashboard = ({ onLogout }) => {
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                                                     {item.marksCards?.length > 0 && (
-                                                        <a href={`http://localhost:8080/uploads/${item.marksCards[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                        <a href={getUploadUrl(item.marksCards[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
                                                             View Marks Card
                                                         </a>
                                                     )}
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
                                                             View Certificate
                                                         </a>
                                                     )}
@@ -299,7 +405,7 @@ const Dashboard = ({ onLogout }) => {
                                                         <Upload size={16} /> Upload Certificate
                                                     </button>
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: '1 1 100%', textAlign: 'center', marginTop: '0.25rem' }}>
+                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: '1 1 100%', textAlign: 'center', marginTop: '0.25rem' }}>
                                                             View Certificate
                                                         </a>
                                                     )}
@@ -313,12 +419,31 @@ const Dashboard = ({ onLogout }) => {
                                                     {item.duration}
                                                 </div>
                                                 <p style={{ fontSize: '1rem', lineHeight: '1.7', color: 'var(--text-secondary)' }}>{item.description}</p>
+                                                {item.skillsUsed && item.skillsUsed.length > 0 && (
+                                                    <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                        {item.skillsUsed.map((skill, idx) => (
+                                                            <span key={idx} style={{ padding: '0.2rem 0.6rem', background: 'rgba(124, 58, 237, 0.1)', color: 'var(--primary)', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid rgba(124, 58, 237, 0.2)' }}>
+                                                                {skill}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {item.responsibilities && item.responsibilities.length > 0 && (
+                                                    <div style={{ marginTop: '1rem' }}>
+                                                        <h5 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Responsibilities:</h5>
+                                                        <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                                            {item.responsibilities.map((resp, idx) => (
+                                                                <li key={idx} style={{ marginBottom: '0.25rem' }}>{resp}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
                                                     <button onClick={() => handleFileUpload(item.id, 'certificate')} className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', flex: 1 }}>
                                                         <Upload size={16} /> Upload Certificate
                                                     </button>
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={`http://localhost:8080/uploads/${item.certificates[0]}`} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: 1, textAlign: 'center' }}>
+                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: 1, textAlign: 'center' }}>
                                                             View Certificate
                                                         </a>
                                                     )}
@@ -330,10 +455,17 @@ const Dashboard = ({ onLogout }) => {
                                             <>
                                                 {item.imageUrl && (
                                                     <div className="img-wrapper">
-                                                        <img src={`http://localhost:8080/uploads/${item.imageUrl}`} alt={item.name} />
+                                                        <img src={getUploadUrl(item.imageUrl)} alt={item.name} />
                                                     </div>
                                                 )}
                                                 <p style={{ marginBottom: '1.5rem', fontSize: '1rem', lineHeight: '1.7' }}>{item.description}</p>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                                                    {item.technologies && item.technologies.map((tech, idx) => (
+                                                        <span key={idx} style={{ padding: '0.2rem 0.6rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                                            {tech}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                                 <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.25rem', paddingBottom: '1.25rem' }}>
                                                     {item.githubUrl && (
                                                         <a href={item.githubUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '600' }}>

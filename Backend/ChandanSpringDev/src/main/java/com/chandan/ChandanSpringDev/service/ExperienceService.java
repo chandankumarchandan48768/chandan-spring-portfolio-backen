@@ -103,9 +103,18 @@ public class ExperienceService {
     public Experience removeCertificate(String id, String fileName) {
         Experience exp = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Experience not found: " + id));
-        String filePath = "exp-certificates/" + fileName;
-        if (exp.getCertificates() != null && exp.getCertificates().remove(filePath)) {
-            fileStorageService.deleteFile(filePath);
+
+        if (exp.getCertificates() != null) {
+            // Find the URL that contains this fileName
+            java.util.Optional<String> fileToRemove = exp.getCertificates().stream()
+                    .filter(url -> url.contains(fileName))
+                    .findFirst();
+
+            fileToRemove.ifPresent(url -> {
+                if (exp.getCertificates().remove(url)) {
+                    fileStorageService.deleteFile(url);
+                }
+            });
         }
         return repository.save(exp);
     }

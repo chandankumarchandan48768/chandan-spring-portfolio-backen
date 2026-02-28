@@ -2,6 +2,7 @@
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/config/WebConfig.java
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/Home.java
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/PortfolioController.java
+/Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/ResumeController.java
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/auth/AuthController.java
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/contactInfo/ContactController.java
 /Users/chandankumar/Desktop/chandan-spring-portfolio/Backend/ChandanSpringDev/src/main/java/com/chandan/ChandanSpringDev/controller/education/EducationController.java

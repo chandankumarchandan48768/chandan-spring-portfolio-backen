@@ -42,10 +42,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Allow public access to GET static uploads
                         .requestMatchers("/uploads/**").permitAll()
-                        // Allow public GET access to portfolio data
+                        // Allow public GET access to portfolio data and resume status
                         .requestMatchers(HttpMethod.GET, "/api/projects/**", "/api/skills/**", "/api/education/**",
-                                "/api/experience/**")
+                                "/api/experience/**", "/api/resume/status")
                         .permitAll()
+                        // Allow public POST access to the contact form submissions
+                        .requestMatchers(HttpMethod.POST, "/api/contact/submit").permitAll()
                         // Require Auth for all other requests (POST, PUT, DELETE)
                         .anyRequest().authenticated());
 
@@ -57,7 +59,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:5175",
+                "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

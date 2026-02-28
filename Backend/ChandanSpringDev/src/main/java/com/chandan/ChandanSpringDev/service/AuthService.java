@@ -9,7 +9,6 @@ import com.chandan.ChandanSpringDev.repository.UserRepository;
 import com.chandan.ChandanSpringDev.security.JwtUtils;
 
 import jakarta.annotation.PostConstruct;
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -35,13 +34,23 @@ public class AuthService {
 
     @PostConstruct
     public void initDefaultUser() {
-        Optional<User> admin = userRepository.findByEmail(DEFAULT_EMAIL);
-        if (admin.isEmpty()) {
-            User defaultUser = new User();
-            defaultUser.setEmail(DEFAULT_EMAIL);
-            defaultUser.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
-            userRepository.save(defaultUser);
-            System.out.println("Default admin user created: " + DEFAULT_EMAIL);
+        // Primary admin
+        if (userRepository.findByEmail(DEFAULT_EMAIL).isEmpty()) {
+            User primaryAdmin = new User();
+            primaryAdmin.setEmail(DEFAULT_EMAIL);
+            primaryAdmin.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
+            userRepository.save(primaryAdmin);
+            System.out.println("Default primary admin created: " + DEFAULT_EMAIL);
+        }
+
+        // Secondary admin
+        String secondaryEmail = "chandan@gmail.com";
+        if (userRepository.findByEmail(secondaryEmail).isEmpty()) {
+            User secondaryAdmin = new User();
+            secondaryAdmin.setEmail(secondaryEmail);
+            secondaryAdmin.setPassword(passwordEncoder.encode("chandan123"));
+            userRepository.save(secondaryAdmin);
+            System.out.println("Secondary admin user created: " + secondaryEmail);
         }
     }
 

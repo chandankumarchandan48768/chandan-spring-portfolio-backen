@@ -1,5 +1,13 @@
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+COPY Backend/ChandanSpringDev/pom.xml .
+COPY Backend/ChandanSpringDev/src ./src
+RUN mvn clean package -DskipTests
+
+# Run stage
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY Backend/ChandanSpringDev/target/ChandanSpringDev-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]

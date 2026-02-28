@@ -63,9 +63,18 @@ public class SkillService {
     public Skills removeCertificate(String id, String fileName) {
         Skills skill = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Skill not found: " + id));
-        String filePath = "skill-certificates/" + fileName;
-        if (skill.getCertificates() != null && skill.getCertificates().remove(filePath)) {
-            fileStorageService.deleteFile(filePath);
+
+        if (skill.getCertificates() != null) {
+            // Find the URL that contains this fileName
+            java.util.Optional<String> fileToRemove = skill.getCertificates().stream()
+                    .filter(url -> url.contains(fileName))
+                    .findFirst();
+
+            fileToRemove.ifPresent(url -> {
+                if (skill.getCertificates().remove(url)) {
+                    fileStorageService.deleteFile(url);
+                }
+            });
         }
         return repository.save(skill);
     }

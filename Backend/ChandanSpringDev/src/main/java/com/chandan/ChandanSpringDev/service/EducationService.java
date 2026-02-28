@@ -9,32 +9,34 @@ import java.util.Optional;
 
 @Service
 public class EducationService {
-    
+
     @Autowired
     private EducationRepository repository;
 
     @Autowired
     private FileStorageService fileStorageService;
-    
+
     public List<Education> getAllEducation() {
         return repository.findAll();
     }
-    
+
     public Optional<Education> getEducationById(String id) {
         return repository.findById(id);
     }
-    
+
     public Education addEducation(Education education) {
-        if (education.getMarksCards() == null) education.setMarksCards(new java.util.ArrayList<>());
-        if (education.getCertificates() == null) education.setCertificates(new java.util.ArrayList<>());
+        if (education.getMarksCards() == null)
+            education.setMarksCards(new java.util.ArrayList<>());
+        if (education.getCertificates() == null)
+            education.setCertificates(new java.util.ArrayList<>());
         return repository.save(education);
     }
-    
+
     public Education updateEducation(String id, Education education) {
         education.setId(id);
         return repository.save(education);
     }
-    
+
     public void deleteEducation(String id) {
         repository.findById(id).ifPresent(e -> {
             e.getMarksCards().forEach(fileStorageService::deleteFile);
@@ -80,10 +82,16 @@ public class EducationService {
 
     public Education removeMarksCard(String id, String fileName) {
         Education education = repository.findById(id).orElseThrow(() -> new RuntimeException("Education not found"));
-        String filePath = "marks-cards/" + fileName;
-        if (education.getMarksCards().remove(filePath)) {
-            fileStorageService.deleteFile(filePath);
-        }
+        // Find the URL that contains this fileName
+        Optional<String> fileToRemove = education.getMarksCards().stream()
+                .filter(url -> url.contains(fileName))
+                .findFirst();
+
+        fileToRemove.ifPresent(url -> {
+            if (education.getMarksCards().remove(url)) {
+                fileStorageService.deleteFile(url);
+            }
+        });
         return repository.save(education);
     }
 
@@ -96,10 +104,16 @@ public class EducationService {
 
     public Education removeCertificate(String id, String fileName) {
         Education education = repository.findById(id).orElseThrow(() -> new RuntimeException("Education not found"));
-        String filePath = "certificates/" + fileName;
-        if (education.getCertificates().remove(filePath)) {
-            fileStorageService.deleteFile(filePath);
-        }
+        // Find the URL that contains this fileName
+        Optional<String> fileToRemove = education.getCertificates().stream()
+                .filter(url -> url.contains(fileName))
+                .findFirst();
+
+        fileToRemove.ifPresent(url -> {
+            if (education.getCertificates().remove(url)) {
+                fileStorageService.deleteFile(url);
+            }
+        });
         return repository.save(education);
     }
 }

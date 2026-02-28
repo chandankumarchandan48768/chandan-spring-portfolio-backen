@@ -27,8 +27,14 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="institution" value={formData.institution || ''} onChange={handleChange} className="input" placeholder="e.g. SSIT" required />
                     <label>Year</label>
                     <input name="graduationYear" value={formData.graduationYear || ''} onChange={handleChange} className="input" placeholder="e.g. 2021" />
+                    <label>Field of Study</label>
+                    <input name="fieldOfStudy" value={formData.fieldOfStudy || ''} onChange={handleChange} className="input" placeholder="e.g. Computer Science" />
                     <label>Grade</label>
                     <input name="grade" value={formData.grade || ''} onChange={handleChange} className="input" placeholder="e.g. 8.5 CGPA" />
+                    <label>Start Date</label>
+                    <input type="date" name="startDate" value={formData.startDate || ''} onChange={handleChange} className="input" />
+                    <label>End Date</label>
+                    <input type="date" name="endDate" value={formData.endDate || ''} onChange={handleChange} className="input" />
                 </>
             )}
 
@@ -59,6 +65,10 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="duration" value={formData.duration || ''} onChange={handleChange} className="input" placeholder="e.g. Jan 2022 - Present" />
                     <label>Description</label>
                     <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="4" placeholder="Describe your achievements..." />
+                    <label>Skills Learned (comma separated)</label>
+                    <input name="skillsUsed" value={Array.isArray(formData.skillsUsed) ? formData.skillsUsed.join(', ') : formData.skillsUsed || ''} onChange={handleChange} className="input" placeholder="e.g. React, Node.js, AWS" />
+                    <label>Responsibilities (comma separated)</label>
+                    <textarea name="responsibilities" value={Array.isArray(formData.responsibilities) ? formData.responsibilities.join(', ') : formData.responsibilities || ''} onChange={handleChange} className="input" rows="2" placeholder="Describe your key responsibilities..." />
                 </>
             )}
 
@@ -68,6 +78,8 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="name" value={formData.name || ''} onChange={handleChange} className="input" placeholder="e.g. Portfolio App" required />
                     <label>Description</label>
                     <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="4" placeholder="Project overview..." />
+                    <label>Technologies (comma separated)</label>
+                    <input name="technologies" value={Array.isArray(formData.technologies) ? formData.technologies.join(', ') : formData.technologies || ''} onChange={handleChange} className="input" placeholder="e.g. React, Spring Boot, MongoDB" />
                     <label>Github URL</label>
                     <input name="githubUrl" value={formData.githubUrl || ''} onChange={handleChange} className="input" placeholder="https://github.com/..." />
                     <label>Live URL</label>
