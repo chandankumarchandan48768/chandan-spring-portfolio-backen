@@ -1,8 +1,8 @@
 # Build stage
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
-COPY Backend/ChandanSpringDev/pom.xml .
-COPY Backend/ChandanSpringDev/src ./src
+COPY pom.xml .
+COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Run stage

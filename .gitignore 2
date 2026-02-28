@@ -1,0 +1,24 @@
+# Build artifacts
+target/
+dist/
+build/
+bin/
+
+# Dependencies
+node_modules/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Local uploads (Now using Cloudinary)
+uploads/
+Backend/ChandanSpringDev/uploads/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+
+# Logs
+*.log
