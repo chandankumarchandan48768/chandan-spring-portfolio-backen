@@ -42,9 +42,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Allow public access to GET static uploads
                         .requestMatchers("/uploads/**").permitAll()
-                        // Allow public GET access to portfolio data and resume status
+                        // Allow public GET access to portfolio data, resume status, and resume download
                         .requestMatchers(HttpMethod.GET, "/api/projects/**", "/api/skills/**", "/api/education/**",
-                                "/api/experience/**", "/api/resume/status")
+                                "/api/experience/**", "/api/resume/status", "/api/resume/download")
                         .permitAll()
                         // Allow public POST access to the contact form submissions
                         .requestMatchers(HttpMethod.POST, "/api/contact/submit").permitAll()

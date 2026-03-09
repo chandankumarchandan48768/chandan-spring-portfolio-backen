@@ -31,11 +31,20 @@ export const api = {
         return response.json();
     },
 
-    // Resume
+    // Resume status (check if resume exists)
     async getResume() {
         const response = await fetch(`${API_BASE_URL}/resume/status`);
         if (!response.ok) throw new Error('Failed to fetch resume status');
         return response.json();
+    },
+
+    /**
+     * Triggers the resume download.
+     * Backend handles Cloudinary redirect with fl_attachment or streams local file.
+     * Returns the download URL for the frontend to use.
+     */
+    getResumeDownloadUrl() {
+        return `${API_BASE_URL}/resume/download`;
     },
 
     // Contact
@@ -48,7 +57,7 @@ export const api = {
             body: JSON.stringify(data),
         });
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({ error: 'Failed to submit contact form' }));
             throw new Error(errorData.error || 'Failed to submit contact form');
         }
         return response.json();

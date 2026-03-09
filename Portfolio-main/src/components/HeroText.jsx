@@ -12,18 +12,26 @@ const HeroText = () => {
   const handleDownload = async (e) => {
     e.preventDefault();
     try {
+      // First check if resume exists
       const data = await api.getResume();
-      if (data.exists && data.url) {
-        const fullUrl = data.url.startsWith('http')
-          ? data.url
-          : `${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:8080'}${data.url}`;
-        window.open(fullUrl, '_blank');
-      } else {
-        alert("Resume not available currently.");
+      if (!data.exists) {
+        alert("Resume not available currently. Please check back later.");
+        return;
       }
+
+      // Use the backend download endpoint which handles Cloudinary fl_attachment redirect
+      // Creating a hidden anchor and clicking it triggers a real browser download
+      const downloadUrl = api.getResumeDownloadUrl();
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", "Chandan_Kumar_Resume.pdf");
+      link.setAttribute("target", "_blank");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error("Error fetching resume:", error);
-      alert("Failed to fetch resume link.");
+      console.error("Error downloading resume:", error);
+      alert("Failed to download resume. Please try again later.");
     }
   };
 
