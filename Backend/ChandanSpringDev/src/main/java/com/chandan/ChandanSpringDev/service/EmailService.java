@@ -75,7 +75,8 @@ public class EmailService {
                 "<hr/>" +
                 "<p><em>You can reply directly to this email to respond to " + request.getName() + "</em>.</p>";
 
-        sendResendEmail(fromEmail, subject, htmlBody, request.getEmail());
+        System.out.println("Sending contact email from " + request.getName());
+        sendResendEmail(fromEmail, subject, htmlBody, null);
     }
 
     /**
