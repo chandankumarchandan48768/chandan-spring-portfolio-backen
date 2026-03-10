@@ -8,9 +8,18 @@ const Project = ({
   githubUrl,
   demoUrl,
   image,
+  startDate,
+  endDate,
+  duration,
   setPreview,
 }) => {
   const [isHidden, setIsHidden] = useState(false);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Present";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
   return (
     <>
       <div
@@ -20,6 +29,12 @@ const Project = ({
       >
         <div className="flex-1 min-w-0">
           <p className="text-3xl font-bold text-white mb-2">{name}</p>
+          {(startDate || endDate || duration) && (
+            <p className="text-neutral-400 text-sm mb-4">
+              {startDate || endDate ? `${formatDate(startDate)} - ${formatDate(endDate)}` : ''}
+              {startDate || endDate ? (duration ? ` • ${duration}` : '') : duration}
+            </p>
+          )}
           <p className="text-neutral-400 text-lg mb-4 line-clamp-2 max-w-2xl">{description}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             {technologies && technologies.map((tech, index) => (
@@ -41,17 +56,18 @@ const Project = ({
         </button>
       </div>
       <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent h-[1px] w-full" />
-      {isHidden && (
-        <ProjectDetails
-          name={name}
-          description={description}
-          technologies={technologies}
-          image={image}
-          githubUrl={githubUrl}
-          demoUrl={demoUrl}
-          closeModal={() => setIsHidden(false)}
-        />
-      )}
+      <ProjectDetails
+        name={name}
+        description={description}
+        technologies={technologies}
+        image={image}
+        startDate={startDate}
+        endDate={endDate}
+        duration={duration}
+        githubUrl={githubUrl}
+        demoUrl={demoUrl}
+        closeModal={() => setIsHidden(false)}
+      />
     </>
   );
 };

@@ -8,8 +8,16 @@ const ProjectDetails = ({
   image,
   githubUrl,
   demoUrl,
+  startDate,
+  endDate,
+  duration,
   closeModal,
 }) => {
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Present";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full overflow-hidden backdrop-blur-sm">
       <motion.div
@@ -41,7 +49,13 @@ const ProjectDetails = ({
         <div className="px-12 py-10 space-y-8">
           {/* Title & Description */}
           <div>
-            <h2 className="text-4xl font-bold text-white mb-4">{name}</h2>
+            <h2 className="text-4xl font-bold text-white mb-2">{name}</h2>
+            {(startDate || endDate || duration) && (
+              <p className="text-cyan-400 font-medium mb-4">
+                {startDate || endDate ? `${formatDate(startDate)} - ${formatDate(endDate)}` : ''}
+                {startDate || endDate ? (duration ? ` • ${duration}` : '') : duration}
+              </p>
+            )}
             <p className="text-neutral-300 leading-relaxed text-lg">{description}</p>
           </div>
 

@@ -16,5 +16,8 @@ public class Project {
     private String githubUrl;
     private String liveUrl; // renamed from demoUrl, harmonised with frontend
     private String imageUrl; // stored file path for project screenshot
+    private String duration;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDate createdAt = LocalDate.now();
 }

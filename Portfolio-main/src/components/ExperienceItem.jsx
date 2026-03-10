@@ -61,7 +61,7 @@ const ExperienceItem = ({
                 <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-neutral-500 group-hover:text-purple-400 transition-colors" />
                     <span className="text-sm font-medium text-neutral-400 bg-neutral-800/50 px-3 py-1.5 rounded-full backdrop-blur-sm border border-neutral-700/50 group-hover:bg-purple-500/10 group-hover:border-purple-500/30 transition-all duration-300">
-                        {formatDate(startDate)} - {formatDate(endDate)} • {duration}
+                        {formatDate(startDate)} - {formatDate(endDate)}{duration ? ` • ${duration}` : ''}
                     </span>
                 </div>
             </div>

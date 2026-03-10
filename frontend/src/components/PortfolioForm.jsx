@@ -31,9 +31,9 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="fieldOfStudy" value={formData.fieldOfStudy || ''} onChange={handleChange} className="input" placeholder="e.g. Computer Science" />
                     <label>Grade</label>
                     <input name="grade" value={formData.grade || ''} onChange={handleChange} className="input" placeholder="e.g. 8.5 CGPA" />
-                    <label>Start Date</label>
+                    <label>From Date</label>
                     <input type="date" name="startDate" value={formData.startDate || ''} onChange={handleChange} className="input" />
-                    <label>End Date</label>
+                    <label>To Date</label>
                     <input type="date" name="endDate" value={formData.endDate || ''} onChange={handleChange} className="input" />
                 </>
             )}
@@ -61,8 +61,12 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="role" value={formData.role || ''} onChange={handleChange} className="input" placeholder="e.g. Full Stack Developer" required />
                     <label>Company</label>
                     <input name="company" value={formData.company || ''} onChange={handleChange} className="input" placeholder="e.g. Google" required />
+                    <label>From Date</label>
+                    <input type="date" name="startDate" value={formData.startDate || ''} onChange={handleChange} className="input" />
+                    <label>To Date</label>
+                    <input type="date" name="endDate" value={formData.endDate || ''} onChange={handleChange} className="input" />
                     <label>Duration</label>
-                    <input name="duration" value={formData.duration || ''} onChange={handleChange} className="input" placeholder="e.g. Jan 2022 - Present" />
+                    <input name="duration" value={formData.duration || ''} onChange={handleChange} className="input" placeholder="e.g. 6 Months" />
                     <label>Description</label>
                     <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="4" placeholder="Describe your achievements..." />
                     <label>Skills Learned (comma separated)</label>
@@ -78,6 +82,12 @@ const PortfolioForm = ({ type, initialData, onSubmit, onCancel }) => {
                     <input name="name" value={formData.name || ''} onChange={handleChange} className="input" placeholder="e.g. Portfolio App" required />
                     <label>Description</label>
                     <textarea name="description" value={formData.description || ''} onChange={handleChange} className="input" rows="4" placeholder="Project overview..." />
+                    <label>From Date</label>
+                    <input type="date" name="startDate" value={formData.startDate || ''} onChange={handleChange} className="input" />
+                    <label>To Date</label>
+                    <input type="date" name="endDate" value={formData.endDate || ''} onChange={handleChange} className="input" />
+                    <label>Duration</label>
+                    <input name="duration" value={formData.duration || ''} onChange={handleChange} className="input" placeholder="e.g. 2 Months" />
                     <label>Technologies (comma separated)</label>
                     <input name="technologies" value={Array.isArray(formData.technologies) ? formData.technologies.join(', ') : formData.technologies || ''} onChange={handleChange} className="input" placeholder="e.g. React, Spring Boot, MongoDB" />
                     <label>Github URL</label>
