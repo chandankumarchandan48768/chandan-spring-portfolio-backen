@@ -54,6 +54,54 @@ public class ResumeController {
      * downloads the file.
      * - For local files: streams with Content-Disposition: attachment header.
      */
+    /**
+     * Opens the resume PDF in the browser (no forced download).
+     * - For Cloudinary URLs: redirects to the raw Cloudinary URL.
+     * - For local files: streams with Content-Disposition: inline.
+     */
+    @GetMapping("/view")
+    public ResponseEntity<?> viewResume() {
+        Optional<Resume> resumeOpt = resumeRepository.findById(RESUME_ID);
+        if (resumeOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "No resume found."));
+        }
+
+        String url = resumeOpt.get().getUrl();
+
+        if (url == null || url.isBlank()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Resume URL is not set."));
+        }
+
+        // For Cloudinary: redirect to raw URL so browser opens it inline
+        if (url.startsWith("https://res.cloudinary.com")) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(url))
+                    .build();
+        }
+
+        // For locally stored files: stream inline
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(url).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Resume file not found on server."));
+            }
+
+            String filename = filePath.getFileName().toString();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Could not view resume: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/download")
     public ResponseEntity<?> downloadResume() {
         Optional<Resume> resumeOpt = resumeRepository.findById(RESUME_ID);

@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         // Allow public GET access to portfolio data, resume status, and resume download
                         .requestMatchers(HttpMethod.GET, "/api/projects/**", "/api/skills/**", "/api/education/**",
-                                "/api/experience/**", "/api/resume/status", "/api/resume/download")
+                                "/api/experience/**", "/api/resume/status", "/api/resume/download", "/api/resume/view")
                         .permitAll()
                         // Allow public POST access to the contact form submissions
                         .requestMatchers(HttpMethod.POST, "/api/contact/submit").permitAll()
