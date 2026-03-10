@@ -54,7 +54,15 @@ public class FileStorageService {
                 // Explicitly detect image extensions to force 'image' type and prevent 'raw'
                 // fallback
                 String resourceType = "auto";
-                if (originalFileName != null) {
+                String contentType = file.getContentType();
+
+                // Strongly infer from MIME type first
+                if (contentType != null && contentType.equals("application/pdf")) {
+                    resourceType = "raw";
+                } else if (contentType != null && contentType.startsWith("image/")) {
+                    resourceType = "image";
+                } else if (originalFileName != null) {
+                    // Fallback to extension check
                     String lowerName = originalFileName.toLowerCase();
                     if (lowerName.endsWith(".pdf")) {
                         resourceType = "raw";
@@ -65,7 +73,6 @@ public class FileStorageService {
                         resourceType = "image";
                     } else if (subDir.contains("resume") || subDir.contains("certificates")
                             || subDir.contains("marks-cards")) {
-                        // Fallback for PDFs if extension is missing but uploaded to document folders
                         resourceType = "raw";
                     }
                 } else if (subDir.contains("resume") || subDir.contains("certificates")
