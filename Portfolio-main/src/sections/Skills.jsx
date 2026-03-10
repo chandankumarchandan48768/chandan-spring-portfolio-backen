@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { skills as staticSkills } from "../constants";
 import { Code2, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../services/api";
 
 const Skills = () => {
     const [selectedCategory, setSelectedCategory] = useState("All");
-    const [skills, setSkills] = useState(staticSkills);
+    const [skills, setSkills] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchSkills = async () => {
@@ -27,8 +27,8 @@ const Skills = () => {
                 }));
                 setSkills(transformedData);
             } catch (err) {
-                console.error('Failed to fetch skills from API, using static data:', err);
-                // Keep static data as fallback
+                console.error('Failed to fetch skills from API:', err);
+                setError('Failed to load skills. Please try again later.');
             } finally {
                 setLoading(false);
             }
@@ -112,7 +112,25 @@ const Skills = () => {
                     ))}
                 </motion.div>
 
+                {/* Loading */}
+                {loading && (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                    </div>
+                )}
+
+                {/* Error */}
+                {!loading && error && (
+                    <div className="text-center py-20 text-neutral-400">{error}</div>
+                )}
+
+                {/* Empty */}
+                {!loading && !error && skills.length === 0 && (
+                    <div className="text-center py-20 text-neutral-500">No skills added yet.</div>
+                )}
+
                 {/* Skills Grid */}
+                {!loading && !error && skills.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
                     {filteredSkills.map((skill, index) => (
                         <motion.div
@@ -177,6 +195,7 @@ const Skills = () => {
                         </motion.div>
                     ))}
                 </div>
+                )}
             </motion.div>
         </section>
     );

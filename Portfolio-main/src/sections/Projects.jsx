@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Project from "../components/Project";
-import { myProjects } from "../constants";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import api from "../services/api";
 
@@ -15,7 +14,7 @@ const Projects = () => {
   };
 
   const [preview, setPreview] = useState(null);
-  const [projects, setProjects] = useState(myProjects); // Fallback to static data
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -43,9 +42,8 @@ const Projects = () => {
         setProjects(transformedData);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch projects from API, using static data:', err);
-        setError(err.message);
-        // Keep static data as fallback
+        console.error('Failed to fetch projects from API:', err);
+        setError('Failed to load projects. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -69,7 +67,15 @@ const Projects = () => {
         </div>
       )}
 
-      {!loading && projects.map((project) => (
+      {!loading && error && (
+        <div className="text-center py-20 text-neutral-400">{error}</div>
+      )}
+
+      {!loading && !error && projects.length === 0 && (
+        <div className="text-center py-20 text-neutral-500">No projects added yet.</div>
+      )}
+
+      {!loading && !error && projects.map((project) => (
         <Project key={project.id} {...project} setPreview={setPreview} />
       ))}
 

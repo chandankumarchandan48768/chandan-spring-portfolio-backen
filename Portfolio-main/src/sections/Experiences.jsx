@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { experiences as staticExperiences } from "../constants";
 import ExperienceItem from "../components/ExperienceItem";
 import { Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../services/api";
 
 const Experiences = () => {
-  const [experiences, setExperiences] = useState(staticExperiences);
+  const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchExperiences = async () => {
@@ -38,8 +38,8 @@ const Experiences = () => {
 
         setExperiences(transformedData);
       } catch (err) {
-        console.error('Failed to fetch experiences from API, using static data:', err);
-        // Keep static data as fallback
+        console.error('Failed to fetch experiences from API:', err);
+        setError('Failed to load experience data. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -90,23 +90,42 @@ const Experiences = () => {
           <div className="bg-gradient-to-r from-purple-500/30 via-neutral-700/50 to-pink-500/30 mt-6 h-[2px] w-24 mx-auto rounded-full" />
         </motion.div>
 
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="text-center py-20 text-neutral-400">{error}</div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && experiences.length === 0 && (
+          <div className="text-center py-20 text-neutral-500">No experience entries added yet.</div>
+        )}
+
         {/* Experience Grid */}
-        <div className="grid gap-8 max-w-5xl mx-auto">
-          {experiences.map((exp, index) => (
-            <motion.div
-              key={exp.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              <ExperienceItem
-                {...exp}
-                onClick={() => exp.certificateUrl && window.open(exp.certificateUrl, '_blank')}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {!loading && !error && experiences.length > 0 && (
+          <div className="grid gap-8 max-w-5xl mx-auto">
+            {experiences.map((exp, index) => (
+              <motion.div
+                key={exp.id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true, margin: "-100px" }}
+              >
+                <ExperienceItem
+                  {...exp}
+                  onClick={() => exp.certificateUrl && window.open(exp.certificateUrl, '_blank')}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </section>
   );

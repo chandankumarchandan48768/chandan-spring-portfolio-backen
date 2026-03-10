@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { myEducation as staticEducation } from "../constants";
 import EducationItem from "../components/EducationItem";
 import EducationDetails from "../components/EducationDetails";
 import { GraduationCap } from "lucide-react";
@@ -8,8 +7,9 @@ import api from "../services/api";
 
 const Education = () => {
     const [selectedEducation, setSelectedEducation] = useState(null);
-    const [myEducation, setMyEducation] = useState(staticEducation);
+    const [myEducation, setMyEducation] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchEducation = async () => {
@@ -67,8 +67,8 @@ const Education = () => {
 
                 setMyEducation(transformedData);
             } catch (err) {
-                console.error('Failed to fetch education from API, using static data:', err);
-                // Keep static data as fallback
+                console.error('Failed to fetch education from API:', err);
+                setError('Failed to load education data. Please try again later.');
             } finally {
                 setLoading(false);
             }
@@ -119,23 +119,42 @@ const Education = () => {
                     <div className="bg-gradient-to-r from-cyan-500/30 via-neutral-700/50 to-purple-500/30 mt-6 h-[2px] w-24 mx-auto rounded-full" />
                 </motion.div>
 
+                {/* Loading */}
+                {loading && (
+                    <div className="flex items-center justify-center py-20">
+                        <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                    </div>
+                )}
+
+                {/* Error */}
+                {!loading && error && (
+                    <div className="text-center py-20 text-neutral-400">{error}</div>
+                )}
+
+                {/* Empty */}
+                {!loading && !error && myEducation.length === 0 && (
+                    <div className="text-center py-20 text-neutral-500">No education entries added yet.</div>
+                )}
+
                 {/* Simple Grid Layout */}
-                <div className="grid gap-8 max-w-5xl mx-auto md:grid-cols-2">
-                    {myEducation.map((edu, index) => (
-                        <motion.div
-                            key={edu.id}
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                        >
-                            <EducationItem
-                                {...edu}
-                                onClick={() => setSelectedEducation(edu)}
-                            />
-                        </motion.div>
-                    ))}
-                </div>
+                {!loading && !error && myEducation.length > 0 && (
+                    <div className="grid gap-8 max-w-5xl mx-auto md:grid-cols-2">
+                        {myEducation.map((edu, index) => (
+                            <motion.div
+                                key={edu.id}
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, delay: index * 0.1 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                            >
+                                <EducationItem
+                                    {...edu}
+                                    onClick={() => setSelectedEducation(edu)}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </motion.div>
 
             {/* Education Details Modal */}
