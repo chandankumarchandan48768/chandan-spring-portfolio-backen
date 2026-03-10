@@ -13,7 +13,7 @@ const Project = ({
   duration,
   setPreview,
 }) => {
-  const [isHidden, setIsHidden] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Present";
@@ -48,7 +48,7 @@ const Project = ({
           </div>
         </div>
         <button
-          onClick={() => setIsHidden(true)}
+          onClick={() => setIsOpen(true)}
           className="flex items-center gap-1 cursor-pointer hover-animation py-2 px-4 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-all"
         >
           Read More
@@ -56,18 +56,20 @@ const Project = ({
         </button>
       </div>
       <div className="bg-gradient-to-r from-transparent via-neutral-700 to-transparent h-[1px] w-full" />
-      <ProjectDetails
-        name={name}
-        description={description}
-        technologies={technologies}
-        image={image}
-        startDate={startDate}
-        endDate={endDate}
-        duration={duration}
-        githubUrl={githubUrl}
-        demoUrl={demoUrl}
-        closeModal={() => setIsHidden(false)}
-      />
+      {isOpen && (
+        <ProjectDetails
+          name={name}
+          description={description}
+          technologies={technologies}
+          image={image}
+          startDate={startDate}
+          endDate={endDate}
+          duration={duration}
+          githubUrl={githubUrl}
+          demoUrl={demoUrl}
+          closeModal={() => setIsOpen(false)}
+        />
+      )}
     </>
   );
 };
