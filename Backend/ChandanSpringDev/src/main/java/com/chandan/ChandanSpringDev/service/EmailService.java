@@ -1,20 +1,27 @@
 package com.chandan.ChandanSpringDev.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import com.chandan.ChandanSpringDev.model.EmailRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${resend.api-key:}")
+    private String resendApiKey;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:onboarding@resend.dev}")
     private String fromEmail;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Sends an OTP email for password reset.
@@ -23,18 +30,15 @@ public class EmailService {
      * @param otp     the 6-digit OTP
      */
     public void sendOtpEmail(String toEmail, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("Portfolio Admin - Password Reset OTP");
-        message.setText(
-                "Hello,\n\n" +
-                        "You requested a password reset for your portfolio admin account.\n\n" +
-                        "Your OTP code is: " + otp + "\n\n" +
-                        "This OTP is valid for 5 minutes.\n\n" +
-                        "If you did not request this, please ignore this email.\n\n" +
-                        "- Portfolio Admin System");
-        mailSender.send(message);
+        String subject = "Portfolio Admin - Password Reset OTP";
+        String htmlBody = "<p>Hello,</p>" +
+                "<p>You requested a password reset for your portfolio admin account.</p>" +
+                "<p>Your OTP code is: <strong>" + otp + "</strong></p>" +
+                "<p>This OTP is valid for 5 minutes.</p>" +
+                "<p>If you did not request this, please ignore this email.</p>" +
+                "<p>- Portfolio Admin System</p>";
+
+        sendResendEmail(toEmail, subject, htmlBody, null);
     }
 
     /**
@@ -46,38 +50,77 @@ public class EmailService {
      * @param otp              the 6-digit OTP
      */
     public void sendAdminRegistrationOtp(String masterAdminEmail, String newAdminEmail, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(masterAdminEmail);
-        message.setSubject("Portfolio Admin - New Admin Registration Request");
-        message.setText(
-                "Hello,\n\n" +
-                        "A new admin registration has been requested for your portfolio:\n\n" +
-                        "New Admin Email: " + newAdminEmail + "\n\n" +
-                        "To APPROVE this registration, share the OTP below with the requester:\n\n" +
-                        "OTP: " + otp + "\n\n" +
-                        "This OTP expires in 5 minutes.\n\n" +
-                        "If you did not initiate this, you can safely ignore this email.\n\n" +
-                        "- Portfolio Admin System");
-        mailSender.send(message);
+        String subject = "Portfolio Admin - New Admin Registration Request";
+        String htmlBody = "<p>Hello,</p>" +
+                "<p>A new admin registration has been requested for your portfolio:</p>" +
+                "<p><strong>New Admin Email:</strong> " + newAdminEmail + "</p>" +
+                "<p>To APPROVE this registration, share the OTP below with the requester:</p>" +
+                "<p>OTP: <strong>" + otp + "</strong></p>" +
+                "<p>This OTP expires in 5 minutes.</p>" +
+                "<p>If you did not initiate this, you can safely ignore this email.</p>" +
+                "<p>- Portfolio Admin System</p>";
+
+        sendResendEmail(masterAdminEmail, subject, htmlBody, null);
     }
 
     /**
      * Sends a contact form message to the portfolio owner.
      */
     public void sendContactEmail(EmailRequest request) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(fromEmail); // Send to portfolio owner
-        message.setReplyTo(request.getEmail()); // Reply goes to the sender
-        message.setSubject("New Portfolio Contact from: " + request.getName());
-        message.setText(
-                "You have received a new message from your portfolio website.\n\n" +
-                        "From: " + request.getName() + "\n" +
-                        "Email: " + request.getEmail() + "\n\n" +
-                        "Message:\n" + request.getMessage() + "\n\n" +
-                        "---\n" +
-                        "You can reply directly to this email to respond to " + request.getName() + ".");
-        mailSender.send(message);
+        String subject = "New Portfolio Contact from: " + request.getName();
+        String htmlBody = "<p>You have received a new message from your portfolio website.</p>" +
+                "<p><strong>From:</strong> " + request.getName() + "<br/>" +
+                "<strong>Email:</strong> " + request.getEmail() + "</p>" +
+                "<blockquote>" + request.getMessage().replace("\n", "<br/>") + "</blockquote>" +
+                "<hr/>" +
+                "<p><em>You can reply directly to this email to respond to " + request.getName() + "</em>.</p>";
+
+        sendResendEmail(fromEmail, subject, htmlBody, request.getEmail());
+    }
+
+    /**
+     * Internal helper to make the HTTP POST request to the Resend API
+     */
+    private void sendResendEmail(String toEmail, String subject, String htmlBody, String replyToUser) {
+        if (resendApiKey == null || resendApiKey.isEmpty()) {
+            throw new RuntimeException("RESEND_API_KEY is not configured.");
+        }
+
+        String url = "https://api.resend.com/emails";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
+
+        Map<String, Object> body = new HashMap<>();
+
+        // Resend officially requires a verified domain to change the 'from' address.
+        // For testing/free tiers, from must exactly be onboarding@resend.dev.
+        // If we haven't configured a custom fromEmail, use their default testing domain
+        if (fromEmail != null && fromEmail.endsWith("@gmail.com")) {
+            body.put("from", "Acme <onboarding@resend.dev>");
+        } else {
+            // Allows using a verified domain
+            body.put("from", "Portfolio <" + fromEmail + ">");
+        }
+
+        body.put("to", toEmail);
+        body.put("subject", subject);
+        body.put("html", htmlBody);
+
+        if (replyToUser != null && !replyToUser.isEmpty()) {
+            body.put("reply_to", replyToUser);
+        }
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Failed to send email via Resend API. Status: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to Resend API: " + e.getMessage(), e);
+        }
     }
 }
