@@ -74,13 +74,15 @@ public class ResumeController {
                     .body(Map.of("error", "Resume URL is not set."));
         }
 
-        // For Cloudinary: add fl_inline transformation so the browser renders it inline.
-        // This works even for raw files that lack a .pdf extension in their URL.
+        // For Cloudinary: Use Google Docs Viewer for 100% reliable cross-browser rendering.
+        // Cloudinary free tier often serves PDFs with headers that native Chrome PDF viewers reject.
+        // Google Docs Viewer can parse and render the Cloudinary URL perfectly.
         if (url.startsWith("https://res.cloudinary.com")) {
-            // Insert fl_inline into the upload path, e.g. /raw/upload/ → /raw/upload/fl_inline/
-            String inlineUrl = url.replace("/upload/", "/upload/fl_inline/");
+            // Remove /raw/ or /image/ from the logic since Google Docs just needs the base URL
+            // We use the original URL and wrap it in Google's viewer
+            String googleDocsViewerUrl = "https://docs.google.com/viewer?url=" + url;
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create(inlineUrl))
+                    .location(URI.create(googleDocsViewerUrl))
                     .build();
         }
 
