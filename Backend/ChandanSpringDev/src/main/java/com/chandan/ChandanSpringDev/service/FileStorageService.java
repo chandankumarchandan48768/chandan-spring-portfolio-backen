@@ -65,7 +65,7 @@ public class FileStorageService {
 
                 String resourceType;
                 if (isPdf) {
-                    resourceType = "raw";
+                    resourceType = "image"; // Cloudinary treats PDFs as images for transformations/viewing
                 } else if (isImage) {
                     resourceType = "image";
                 } else {
@@ -76,12 +76,11 @@ public class FileStorageService {
                 params.put("folder", "portfolio/" + subDir);
                 params.put("resource_type", resourceType);
 
-                if ("raw".equals(resourceType)) {
-                    // For raw PDF files: craft a public_id that INCLUDES the .pdf extension.
-                    // This ensures the Cloudinary URL ends with .pdf and browsers render it correctly.
-                    // Do NOT use use_filename + unique_filename together — they strip the extension.
-                    String ext = lowerName.endsWith(".pdf") ? ".pdf" : "";
-                    params.put("public_id", UUID.randomUUID().toString() + ext);
+                if (isPdf) {
+                    // For PDFs, we don't need to force the .pdf extension manually anymore 
+                    // because Cloudinary 'image' type handles PDF extensions natively
+                    // But we can ensure it's clean just in case:
+                    params.put("public_id", UUID.randomUUID().toString());
                 }
 
                 @SuppressWarnings("unchecked")
