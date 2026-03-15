@@ -57,6 +57,7 @@ export const educationService = {
     formData.append('file', file);
     return api.post(`/education/${id}/upload-marks-card`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000, // 60s — backend on Render free tier may be waking up
     });
   },
   uploadCertificate: (id, file) => {
@@ -64,6 +65,7 @@ export const educationService = {
     formData.append('file', file);
     return api.post(`/education/${id}/upload-certificate`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
 };
@@ -78,6 +80,7 @@ export const skillsService = {
     formData.append('file', file);
     return api.post(`/skills/${id}/upload-certificate`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
   uploadIcon: (id, file) => {
@@ -85,6 +88,7 @@ export const skillsService = {
     formData.append('file', file);
     return api.post(`/skills/${id}/upload-icon`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
 };
@@ -100,6 +104,7 @@ export const experienceService = {
     formData.append('file', file);
     return api.post(`/experience/${id}/upload-certificate`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
 };
@@ -115,6 +120,7 @@ export const projectService = {
     formData.append('file', file);
     return api.post(`/projects/${id}/upload-image`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
 };
@@ -126,6 +132,7 @@ export const resumeService = {
     formData.append('file', file);
     return api.post('/resume/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
   delete: () => api.delete('/resume')

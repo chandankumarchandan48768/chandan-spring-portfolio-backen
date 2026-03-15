@@ -21,6 +21,11 @@ public class EmailService {
     @Value("${spring.mail.username:onboarding@resend.dev}")
     private String fromEmail;
 
+    // The inbox that receives contact form submissions.
+    // Set CONTACT_RECIPIENT_EMAIL env-var on Render to your Gmail address.
+    @Value("${contact.recipient.email:}")
+    private String contactRecipientEmail;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
@@ -73,10 +78,19 @@ public class EmailService {
                 "<strong>Email:</strong> " + request.getEmail() + "</p>" +
                 "<blockquote>" + request.getMessage().replace("\n", "<br/>") + "</blockquote>" +
                 "<hr/>" +
-                "<p><em>You can reply directly to this email to respond to " + request.getName() + "</em>.</p>";
+                "<p><em>Reply directly to this email to respond to " + request.getName() + ".</em></p>";
 
-        System.out.println("Sending contact email from " + request.getName());
-        sendResendEmail(fromEmail, subject, htmlBody, null);
+        // Send to the configured contact recipient (owner's inbox).
+        // Falls back to fromEmail if CONTACT_RECIPIENT_EMAIL is not set.
+        String toEmail = (contactRecipientEmail != null && !contactRecipientEmail.isEmpty())
+                ? contactRecipientEmail
+                : fromEmail;
+
+        System.out.println("[ContactEmail] Sending contact email from '" + request.getName()
+                + "' to inbox: " + toEmail);
+
+        // Pass visitor email as reply-to so portfolio owner can reply directly
+        sendResendEmail(toEmail, subject, htmlBody, request.getEmail());
     }
 
     /**

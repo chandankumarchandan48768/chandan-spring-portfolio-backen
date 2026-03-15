@@ -19,6 +19,18 @@ const Dashboard = ({ onLogout }) => {
         return filename.startsWith('/uploads/') ? `${baseUrl}${filename}` : `${baseUrl}/uploads/${filename}`;
     };
 
+    // For PDF files stored on Cloudinary as 'raw', inject fl_attachment so the
+    // browser downloads the file instead of trying (and failing) to render it inline.
+    const getPdfViewUrl = (url) => {
+        if (!url) return '';
+        const fullUrl = getUploadUrl(url);
+        // Cloudinary raw URLs: .../raw/upload/v.../... → inject fl_attachment flag
+        if (fullUrl.includes('/raw/upload/') && !fullUrl.includes('fl_attachment')) {
+            return fullUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+        }
+        return fullUrl;
+    };
+
     const tabs = [
         { id: 'education', label: 'Education', icon: BookOpen },
         { id: 'skills', label: 'Skills', icon: Code },
@@ -368,13 +380,13 @@ const Dashboard = ({ onLogout }) => {
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                                                     {item.marksCards?.length > 0 && (
-                                                        <a href={getUploadUrl(item.marksCards[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
-                                                            View Marks Card
+                                                        <a href={getPdfViewUrl(item.marksCards[0])} target="_blank" rel="noopener noreferrer" download className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                            ⬇ Download Marks Card
                                                         </a>
                                                     )}
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
-                                                            View Certificate
+                                                        <a href={getPdfViewUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" download className="btn glass-effect" style={{ fontSize: '0.8rem', flex: 1, padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', textAlign: 'center' }}>
+                                                            ⬇ Download Certificate
                                                         </a>
                                                     )}
                                                 </div>
@@ -405,8 +417,8 @@ const Dashboard = ({ onLogout }) => {
                                                         <Upload size={16} /> Upload Certificate
                                                     </button>
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: '1 1 100%', textAlign: 'center', marginTop: '0.25rem' }}>
-                                                            View Certificate
+                                                        <a href={getPdfViewUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" download className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: '1 1 100%', textAlign: 'center', marginTop: '0.25rem' }}>
+                                                            ⬇ Download Certificate
                                                         </a>
                                                     )}
                                                 </div>
@@ -443,8 +455,8 @@ const Dashboard = ({ onLogout }) => {
                                                         <Upload size={16} /> Upload Certificate
                                                     </button>
                                                     {item.certificates?.length > 0 && (
-                                                        <a href={getUploadUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: 1, textAlign: 'center' }}>
-                                                            View Certificate
+                                                        <a href={getPdfViewUrl(item.certificates[0])} target="_blank" rel="noopener noreferrer" download className="btn glass-effect" style={{ fontSize: '0.8rem', padding: '0.75rem', color: 'var(--primary)', textDecoration: 'none', flex: 1, textAlign: 'center' }}>
+                                                            ⬇ Download Certificate
                                                         </a>
                                                     )}
                                                 </div>
