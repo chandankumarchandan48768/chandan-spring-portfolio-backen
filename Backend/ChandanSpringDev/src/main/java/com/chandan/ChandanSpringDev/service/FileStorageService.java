@@ -51,44 +51,37 @@ public class FileStorageService {
 
         if (cloudinary != null) {
             try {
-                // Explicitly detect image extensions to force 'image' type and prevent 'raw'
-                // fallback
-                String resourceType = "auto";
                 String contentType = file.getContentType();
+                String lowerName = originalFileName != null ? originalFileName.toLowerCase() : "";
 
-                // Strongly infer from MIME type first
-                if (contentType != null && contentType.equals("application/pdf")) {
+                // Determine resource type based on MIME type / extension / subDir
+                boolean isPdf = (contentType != null && contentType.equals("application/pdf"))
+                        || lowerName.endsWith(".pdf");
+                boolean isImage = (contentType != null && contentType.startsWith("image/"))
+                        || lowerName.endsWith(".png") || lowerName.endsWith(".jpg")
+                        || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif")
+                        || lowerName.endsWith(".svg") || lowerName.endsWith(".webp")
+                        || lowerName.endsWith(".ico");
+
+                String resourceType;
+                if (isPdf) {
                     resourceType = "raw";
-                } else if (contentType != null && contentType.startsWith("image/")) {
+                } else if (isImage) {
                     resourceType = "image";
-                } else if (originalFileName != null) {
-                    // Fallback to extension check
-                    String lowerName = originalFileName.toLowerCase();
-                    if (lowerName.endsWith(".pdf")) {
-                        resourceType = "raw";
-                    } else if (lowerName.endsWith(".png") || lowerName.endsWith(".jpg") ||
-                            lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif") ||
-                            lowerName.endsWith(".svg") || lowerName.endsWith(".webp") ||
-                            lowerName.endsWith(".ico")) {
-                        resourceType = "image";
-                    } else if (subDir.contains("resume") || subDir.contains("certificates")
-                            || subDir.contains("marks-cards")) {
-                        resourceType = "raw";
-                    }
-                } else if (subDir.contains("resume") || subDir.contains("certificates")
-                        || subDir.contains("marks-cards")) {
-                    resourceType = "raw";
+                } else {
+                    resourceType = "auto";
                 }
 
                 Map<String, Object> params = new java.util.HashMap<>();
                 params.put("folder", "portfolio/" + subDir);
                 params.put("resource_type", resourceType);
 
-                if ("raw".equals(resourceType) && originalFileName != null) {
-                    params.put("use_filename", true);
-                    params.put("unique_filename", true);
-                    // For raw files, explicitly setting public_id with extension sometimes helps
-                    params.put("public_id", UUID.randomUUID().toString() + "_" + originalFileName);
+                if ("raw".equals(resourceType)) {
+                    // For raw PDF files: craft a public_id that INCLUDES the .pdf extension.
+                    // This ensures the Cloudinary URL ends with .pdf and browsers render it correctly.
+                    // Do NOT use use_filename + unique_filename together — they strip the extension.
+                    String ext = lowerName.endsWith(".pdf") ? ".pdf" : "";
+                    params.put("public_id", UUID.randomUUID().toString() + ext);
                 }
 
                 @SuppressWarnings("unchecked")
@@ -100,6 +93,7 @@ public class FileStorageService {
                 throw new RuntimeException("Could not store file to Cloudinary: " + fileName, ex);
             }
         }
+
         // ... (rest of the code for local storage stays same)
         try {
             if (fileName.contains("..")) {

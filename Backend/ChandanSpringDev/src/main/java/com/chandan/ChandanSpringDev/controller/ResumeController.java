@@ -74,10 +74,13 @@ public class ResumeController {
                     .body(Map.of("error", "Resume URL is not set."));
         }
 
-        // For Cloudinary: redirect to raw URL so browser opens it inline
+        // For Cloudinary: add fl_inline transformation so the browser renders it inline.
+        // This works even for raw files that lack a .pdf extension in their URL.
         if (url.startsWith("https://res.cloudinary.com")) {
+            // Insert fl_inline into the upload path, e.g. /raw/upload/ → /raw/upload/fl_inline/
+            String inlineUrl = url.replace("/upload/", "/upload/fl_inline/");
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create(url))
+                    .location(URI.create(inlineUrl))
                     .build();
         }
 

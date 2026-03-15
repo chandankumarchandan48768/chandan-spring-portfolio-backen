@@ -43,32 +43,38 @@ public class AuthService {
 
     @PostConstruct
     public void initDefaultUser() {
-        // Primary admin
-        if (userRepository.findByEmail(DEFAULT_EMAIL).isEmpty()) {
-            User primaryAdmin = new User();
-            primaryAdmin.setEmail(DEFAULT_EMAIL);
-            primaryAdmin.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
-            userRepository.save(primaryAdmin);
-            System.out.println("Default primary admin created: " + DEFAULT_EMAIL);
-        }
+        try {
+            // Primary admin
+            if (userRepository.findByEmail(DEFAULT_EMAIL).isEmpty()) {
+                User primaryAdmin = new User();
+                primaryAdmin.setEmail(DEFAULT_EMAIL);
+                primaryAdmin.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
+                userRepository.save(primaryAdmin);
+                System.out.println("Default primary admin created: " + DEFAULT_EMAIL);
+            }
 
-        // Secondary admin
-        String secondaryEmail = "chandan@gmail.com";
-        if (userRepository.findByEmail(secondaryEmail).isEmpty()) {
-            User secondaryAdmin = new User();
-            secondaryAdmin.setEmail(secondaryEmail);
-            secondaryAdmin.setPassword(passwordEncoder.encode("chandan123"));
-            userRepository.save(secondaryAdmin);
-            System.out.println("Secondary admin user created: " + secondaryEmail);
-        }
+            // Secondary admin
+            String secondaryEmail = "chandan@gmail.com";
+            if (userRepository.findByEmail(secondaryEmail).isEmpty()) {
+                User secondaryAdmin = new User();
+                secondaryAdmin.setEmail(secondaryEmail);
+                secondaryAdmin.setPassword(passwordEncoder.encode("chandan123"));
+                userRepository.save(secondaryAdmin);
+                System.out.println("Secondary admin user created: " + secondaryEmail);
+            }
 
-        // Master admin (personal)
-        if (userRepository.findByEmail(MASTER_ADMIN_EMAIL).isEmpty()) {
-            User masterAdmin = new User();
-            masterAdmin.setEmail(MASTER_ADMIN_EMAIL);
-            masterAdmin.setPassword(passwordEncoder.encode("Chandan@123"));
-            userRepository.save(masterAdmin);
-            System.out.println("Master admin user created: " + MASTER_ADMIN_EMAIL);
+            // Master admin (personal)
+            if (userRepository.findByEmail(MASTER_ADMIN_EMAIL).isEmpty()) {
+                User masterAdmin = new User();
+                masterAdmin.setEmail(MASTER_ADMIN_EMAIL);
+                masterAdmin.setPassword(passwordEncoder.encode("Chandan@123"));
+                userRepository.save(masterAdmin);
+                System.out.println("Master admin user created: " + MASTER_ADMIN_EMAIL);
+            }
+        } catch (Exception e) {
+            // Log the error but do NOT crash the application.
+            // Default users can be seeded on first login attempt instead.
+            System.err.println("[WARN] Could not seed default admin users during startup: " + e.getMessage());
         }
     }
 
